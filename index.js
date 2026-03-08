@@ -15,23 +15,24 @@ const start = async() => {
     
   const sock = makeWASocket({
     auth: state,
-    logger: P({ level: 'silent' })
+    logger: P({ level: 'silent' }),
+    browser: ['Ubuntu', 'Chrome', '20.0.0']
   });
 
   sock.ev.on('creds.update', saveCreds);
 
   sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
     if (qr) {
-      const QRWhatsApp = await QRCode.toString(qr, { type: 'terminal' })
+      let QRWhatsApp = await QRCode.toString(qr, { type: 'terminal' })
       console.log(QRWhatsApp)
     }
-
+    
     if (connection == 'close') {
-      const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
+      let shouldReconnect = lastDisconnect?.error?.output?.statusCode != DisconnectReason.loggedOut
       console.log('Conexión cerrada. Reconectando:', shouldReconnect)
-        
+      
       if (shouldReconnect) {
-        start()
+        setTimeout(() => start(), 3000)
       }
     }
     
