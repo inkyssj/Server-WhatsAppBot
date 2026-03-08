@@ -46,11 +46,10 @@ const start = async () => {
     if (connection == 'open') console.log('Conectado a WhatsApp')
   });
 
-  sock.ev.on('messages.upsert', ({ messages }) => {
-    const msg = messages[0]
-
-    let text = msg.message?.conversation || msg.message?.extendedTextMessage?.text
-    if (text) console.log('Mensaje:', text)
+  sock.ev.on('messages.upsert', ({ type, messages }) => {
+    if (type == 'notify') {
+      console.log(messages);
+    }
   });
 };
 
