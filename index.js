@@ -47,7 +47,7 @@ const start = async () => {
   });
 
   sock.ev.on('messages.upsert', ({ type, messages }) => {
-    if (type == 'notify') console.log(messages)
+    if (type == 'notify') console.log(messages[0])
   });
 };
 
