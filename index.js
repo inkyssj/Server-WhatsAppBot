@@ -4,16 +4,11 @@ const {
   default: makeWASocket,
   DisconnectReason,
   useMultiFileAuthState,
-  fetchLatestBaileysVersion,
-  makeInMemoryStore
+  fetchLatestBaileysVersion
 } = require('baileys');
 
 const P = require('pino');
 const QRCode = require('qrcode');
-
-const store = makeInMemoryStore({
-  logger: P().child({ level: 'silent', stream: 'store' })
-});
 
 const start = async () => {
 
@@ -27,8 +22,6 @@ const start = async () => {
     logger: P({ level: 'silent' }),
     browser: ['Ubuntu', 'Chrome', '120.0.0']
   });
-
-  store.bind(sock.ev);
 
   sock.ev.on('creds.update', saveCreds);
 
