@@ -1,54 +1,63 @@
 const fs = require('fs');
 
-// Baileys
 const {
-  makeWASocket,
+  default: makeWASocket,
   DisconnectReason,
-  useMultiFileAuthState
+  useMultiFileAuthState,
+  fetchLatestBaileysVersion,
+  makeInMemoryStore
 } = require('baileys');
 
 const P = require('pino');
 const QRCode = require('qrcode');
 
-const start = async() => {
+const store = makeInMemoryStore({
+  logger: P().child({ level: 'silent', stream: 'store' })
+});
+
+const start = async () => {
+
   const { state, saveCreds } = await useMultiFileAuthState('./auth');
-    
+
+  const { version } = await fetchLatestBaileysVersion();
+
   const sock = makeWASocket({
+    version,
     auth: state,
     logger: P({ level: 'silent' }),
-    browser: ['Ubuntu', 'Chrome', '20.0.0']
+    browser: ['Ubuntu', 'Chrome', '120.0.0']
   });
+
+  store.bind(sock.ev);
 
   sock.ev.on('creds.update', saveCreds);
 
-  sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
+  sock.ev.on('connection.update', async({ connection, lastDisconnect, qr }) => {
     if (qr) {
-      let QRWhatsApp = await QRCode.toString(qr, { type: 'terminal' })
-      console.log(QRWhatsApp)
+      let qrTerminal = await QRCode.toString(qr, { type: 'terminal' })
+      console.log(qrTerminal)
     }
-    
+
     if (connection == 'close') {
-      let shouldReconnect = lastDisconnect?.error?.output?.statusCode != DisconnectReason.loggedOut
-      console.log('Conexión cerrada. Reconectando:', shouldReconnect)
-      
+      let statusCode = lastDisconnect?.error?.output?.statusCode
+      let shouldReconnect = statusCode !== DisconnectReason.loggedOut
+
+      console.log('Conexión cerrada:', statusCode)
+      console.log('Reconectando:', shouldReconnect)
+
       if (shouldReconnect) {
-        setTimeout(() => start(), 3000)
+        setTimeout(start, 5000)
       }
     }
-    
-    if (connection == 'open') {
-      console.log('Conectado a WhatsApp')
-    }
+
+    if (connection == 'open') console.log('✅ Conectado a WhatsApp')
   });
-  
-  sock.ev.on('messages.upsert', ({ type, messages }) => {
-    if (type == 'notify') {
-      for (const message of messages) {
-        const text = message.message?.conversation || message.message?.extendedTextMessage?.text
-        if (text)
-          console.log('Mensaje:', text)
-      }
-    }
+
+  sock.ev.on('messages.upsert', ({ messages }) => {
+    const msg = messages[0]
+
+    let text = msg.message?.conversation || msg.message?.extendedTextMessage?.text
+    if (text) console.log('Mensaje:', text)
   });
 };
 
