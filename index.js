@@ -43,7 +43,7 @@ const start = async () => {
       }
     }
 
-    if (connection == 'open') console.log('✅ Conectado a WhatsApp')
+    if (connection == 'open') console.log('Conectado a WhatsApp')
   });
 
   sock.ev.on('messages.upsert', ({ messages }) => {
