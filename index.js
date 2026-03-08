@@ -27,7 +27,7 @@ const start = async () => {
 
   sock.ev.on('connection.update', async({ connection, lastDisconnect, qr }) => {
     if (qr) {
-      let qrTerminal = await QRCode.toString(qr, { type: 'terminal' })
+      let qrTerminal = await QRCode.toString(qr, { type: 'terminal', small: true, margin: 1 })
       console.log(qrTerminal)
     }
 
